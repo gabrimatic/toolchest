@@ -1,0 +1,104 @@
+name: Bug report
+description: Report broken or surprising behavior in Toolchest.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence describing what broke.
+      placeholder: "The quit guard lets Command-Q through in Safari."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The shortest path that reproduces the issue, including which modules and features are on.
+      placeholder: |
+        1. Settings > Windows and Dock > turn the module and Quit guard on
+        2. Open Safari
+        3. Press Command-Q once, quickly
+        4. Safari quits
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead, including any message Toolchest showed.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Toolchest version
+      description: Shown in Toolchest > About Toolchest.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: macOS version and Mac
+      placeholder: "macOS 26.1 on a MacBook Pro with M4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Finder
+        - Finder extension (right-click menu)
+        - Windows and Dock
+        - Keyboard
+        - Screen
+        - Audio
+        - Utilities
+        - Mail and Notes
+        - Shortcuts, Focus filter, controls or widgets
+        - Welcome window, Settings or permissions
+        - Install or update
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed it
+      options:
+        - install.sh
+        - Downloaded zip or dmg
+        - Built from source
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: "Output of `log show --last 5m --predicate 'subsystem == \"info.gabrimatic.toolchest\"' --info`. Redact anything personal."
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else that helps with triage.
+    validations:
+      required: false

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toolchest: Power tools for your Mac</title>
+<meta name="description" content="A free macOS menu bar app with power tools: Finder cut and paste, quit guard, Hyper key, text capture, mic mute, Keep Awake and more.">
+<meta name="author" content="Soroush Yousefpour">
+<meta name="theme-color" content="#1b262c">
+<link rel="canonical" href="https://gabrimatic.github.io/toolchest/">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Toolchest">
+<meta property="og:url" content="https://gabrimatic.github.io/toolchest/">
+<meta property="og:title" content="Toolchest: Power tools for your Mac">
+<meta property="og:description" content="A free macOS menu bar app with power tools: Finder cut and paste, quit guard, Hyper key, text capture, mic mute, Keep Awake and more.">
+<meta property="og:image" content="https://gabrimatic.github.io/toolchest/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Toolchest: Power tools for your Mac">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Toolchest: Power tools for your Mac">
+<meta name="twitter:description" content="A free macOS menu bar app with power tools: Finder cut and paste, quit guard, Hyper key, text capture, mic mute, Keep Awake and more.">
+<meta name="twitter:image" content="https://gabrimatic.github.io/toolchest/og.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Toolchest","operatingSystem":"macOS 26 or later","applicationCategory":"UtilitiesApplication","description":"A free macOS menu bar app with power tools: Finder cut and paste, quit guard, Hyper key, text capture, mic mute, Keep Awake and more.","url":"https://gabrimatic.github.io/toolchest/","downloadUrl":"https://github.com/gabrimatic/toolchest/releases/latest","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"Soroush Yousefpour","url":"https://gabrimatic.info"},"license":"https://opensource.org/license/mit"}</script>
+<style>
+:root{--ground:#1b262c;--text:#bbe1fa;--secondary:rgba(187,225,250,.72);--surface:rgba(187,225,250,.05);--line:rgba(187,225,250,.25);--divider:rgba(187,225,250,.08);--accent:#3282b8;--on-accent:#eef8fe;color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--ground:#eef8fe;--text:#1b262c;--secondary:rgba(27,38,44,.72);--surface:rgba(27,38,44,.04);--line:rgba(27,38,44,.2);--divider:rgba(27,38,44,.1);color-scheme:light}}
+@font-face{font-family:"IBM Plex Sans";src:url(IBMPlexSans.ttf) format("truetype");font-weight:100 700;font-display:swap}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--text);font:400 17px/1.6 "IBM Plex Sans",-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:1000px;margin:0 auto;padding:72px 32px 48px}
+header{text-align:center}
+header img{width:112px;height:112px;display:block;margin:0 auto 24px}
+h1{font-size:56px;line-height:1.1;font-weight:300;letter-spacing:-.02em;margin:0}
+.line{font-size:20px;line-height:1.5;color:var(--secondary);max-width:680px;margin:16px auto 32px}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.button{display:inline-flex;align-items:center;height:44px;padding:0 24px;border-radius:22px;font-size:15px;font-weight:500;text-decoration:none;color:var(--text);border:1px solid var(--line)}
+.button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.hero{display:block;width:100%;height:auto;margin:56px 0 0;border-radius:20px;border:1px solid var(--divider)}
+section{margin-top:64px}
+h2{font-size:24px;line-height:1.3;font-weight:500;margin:0 0 8px}
+.lead{color:var(--secondary);margin:0 0 24px;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+article{padding:24px;background:var(--surface);border:1px solid var(--divider);border-radius:16px}
+h3{font-size:17px;font-weight:500;margin:0 0 8px}
+article p{margin:0;font-size:15px;line-height:1.55;color:var(--secondary)}
+pre{margin:0;padding:16px 24px;overflow-x:auto;background:var(--surface);border:1px solid var(--divider);border-radius:16px;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+.note{margin:16px 0 0;font-size:15px;color:var(--secondary)}
+a{color:inherit}
+footer{max-width:1000px;margin:0 auto;padding:24px 32px 64px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;color:var(--secondary);font-size:14px;border-top:1px solid var(--divider)}
+footer a{text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:640px){main{padding:48px 16px 32px}h1{font-size:40px}.line{font-size:18px}section{margin-top:48px}footer{padding:24px 16px 48px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<img src="icon.png" alt="" width="112" height="112">
+<h1>Toolchest</h1>
+<p class="line">Power tools for your Mac, in the menu bar. Every one switches on and off on its own.</p>
+<div class="actions">
+<a class="button primary" href="https://github.com/gabrimatic/toolchest/releases/latest">Download</a>
+<a class="button" href="https://github.com/gabrimatic/toolchest">View on GitHub</a>
+</div>
+</header>
+<img class="hero" src="hero.png" alt="What Toolchest does: A free macOS menu bar app with power tools: Finder cut and paste, quit guard, Hyper key, text capture, mic mute, Keep Awake and more.">
+<section>
+<h2>What it does</h2>
+<p class="lead">What macOS leaves out, in one menu bar app. Everything starts off, and you switch on only what you want.</p>
+<div class="grid">
+<article><h3>Finder</h3><p>Cut and paste files, Return to open, reopen closed windows, new files, Name by Content.</p></article>
+<article><h3>Windows and Dock</h3><p>Quit guard for Command-Q, isolate a window, smarter Dock clicks, a green button that fills the screen.</p></article>
+<article><h3>Keyboard</h3><p>Caps Lock as a Hyper key, app hotkeys, drop-down windows and a Shortcut Inspector.</p></article>
+<article><h3>Screen</h3><p>Capture Text, Capture and Translate, Capture and Summarize, QR codes and a color picker.</p></article>
+<article><h3>Audio</h3><p>A mic mute you can reach from anywhere, device switching with a shortcut, and a volume cap after wake.</p></article>
+<article><h3>Utilities</h3><p>Keep Awake, Cleaning Mode, Dark Mode and notification shortcuts, in Shortcuts and widgets too.</p></article>
+</div>
+</section>
+<section>
+<h2>Install</h2>
+<p class="lead">Free and open source, for macOS 26 or later on Apple silicon.</p>
+<pre><code>curl -fsSL https://raw.githubusercontent.com/gabrimatic/toolchest/main/install.sh | bash</code></pre>
+<p class="note">It checks the download's SHA-256 before it installs anything. Or <a href="https://github.com/gabrimatic/toolchest/releases/latest">download the disk image</a> and see <a href="https://github.com/gabrimatic/toolchest#first-open">First Open</a>: release builds are signed ad hoc, not notarized.</p>
+</section>
+<section>
+<h2>Privacy</h2>
+<p class="lead">Toolchest makes no network calls and has no accounts or analytics. It never records keystrokes or clipboard contents, and asks only for what the modules you turn on need.</p>
+</section>
+</main>
+<footer>
+<span>Created by <a href="https://gabrimatic.info">Soroush Yousefpour</a></span>
+<span><a href="https://github.com/gabrimatic/toolchest">GitHub</a> · <a href="https://github.com/gabrimatic/toolchest/blob/main/LICENSE">MIT License</a> · <a href="https://www.buymeacoffee.com/gabrimatic">Buy Me a Coffee</a></span>
+</footer>
+</body>
+</html>

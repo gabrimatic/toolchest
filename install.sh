@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+#
+# Installs the latest Toolchest release.
+#   curl -fsSL https://raw.githubusercontent.com/gabrimatic/toolchest/main/install.sh | bash
+#
+# Downloads the release zip, checks its SHA-256 against the release's SHA256SUMS.txt, verifies the app,
+# installs it to /Applications and opens it. Nothing else is touched.
+#
+# Options:
+#   --no-open  install without opening the app
+#   --help
+# Environment:
+#   TOOLCHEST_VERSION      install this version (for example 1.0.0) instead of the latest
+#   TOOLCHEST_INSTALL_DIR  install here instead of /Applications
+#   TOOLCHEST_BASE_URL     where releases are served (default: GitHub releases of gabrimatic/toolchest)
+
+set -euo pipefail
+
+REPO="gabrimatic/toolchest"
+BUNDLE_ID="info.gabrimatic.toolchest"
+BASE_URL="${TOOLCHEST_BASE_URL:-https://github.com/$REPO/releases/download}"
+MIN_MACOS=26
+OPEN_APP=true
+
+BOLD=$'\033[1m'; RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; NC=$'\033[0m'
+if [[ ! -t 1 ]]; then BOLD=""; RED=""; GREEN=""; NC=""; fi
+
+say()  { printf '%s\n' "$*"; }
+fail() { printf '\n%sInstall stopped.%s %s\n' "$RED" "$NC" "$1" >&2; exit 1; }
+
+usage() {
+  cat <<'USAGE'
+Usage: install.sh [--no-open]
+
+Installs the latest Toolchest release to /Applications after checking its SHA-256.
+
+  --no-open            install without opening the app
+
+Environment:
+  TOOLCHEST_VERSION      install this version (for example 1.0.0) instead of the latest
+  TOOLCHEST_INSTALL_DIR  install here instead of /Applications
+  TOOLCHEST_BASE_URL     where releases are served (default: GitHub releases of gabrimatic/toolchest)
+USAGE
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-open) OPEN_APP=false ;;
+    -h|--help) usage; exit 0 ;;
+    *) fail "Unknown option: $arg (try --help)" ;;
+  esac
+done
+
+say ""
+say "${BOLD}Toolchest installer${NC}"
+
+# --- This Mac ---
+
+[[ "$(uname -s)" == "Darwin" ]] || fail "Toolchest is a macOS app. This is $(uname -s)."
+
+# hw.optional.arm64 is 1 on Apple silicon even when this shell runs under Rosetta.
+[[ "$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)" == "1" ]] \
+  || fail "Toolchest needs a Mac with Apple silicon (M1 or later). This Mac has an Intel processor."
+
+MACOS_VERSION="$(sw_vers -productVersion)"
+[[ "${MACOS_VERSION%%.*}" =~ ^[0-9]+$ ]] || fail "Could not read the macOS version (got '$MACOS_VERSION')."
+(( ${MACOS_VERSION%%.*} >= MIN_MACOS )) \
+  || fail "Toolchest needs macOS $MIN_MACOS or later. This Mac runs macOS $MACOS_VERSION. Update macOS, then run this again."
+
+for tool in curl shasum ditto codesign awk; do
+  command -v "$tool" >/dev/null 2>&1 || fail "'$tool' is missing. It ships with macOS; check that /usr/bin is on your PATH."
+done
+
+if [[ -n "${TOOLCHEST_INSTALL_DIR:-}" ]]; then
+  INSTALL_DIR="${TOOLCHEST_INSTALL_DIR%/}"
+  [[ -d "$INSTALL_DIR" ]] || fail "$INSTALL_DIR does not exist."
+  [[ -w "$INSTALL_DIR" ]] || fail "$INSTALL_DIR is not writable for this user."
+elif [[ -w /Applications ]]; then
+  INSTALL_DIR="/Applications"
+else
+  INSTALL_DIR="$HOME/Applications"
+  mkdir -p "$INSTALL_DIR" || fail "/Applications is not writable and $INSTALL_DIR could not be created."
+  say "/Applications is not writable for this user, so Toolchest goes to $INSTALL_DIR."
+fi
+
+# --- Version ---
+
+VERSION="${TOOLCHEST_VERSION:-}"
+VERSION="${VERSION#v}"
+if [[ -z "$VERSION" ]]; then
+  # /releases/latest redirects to /releases/tag/v<version>; reading the redirect needs no API token and no jq.
+  LATEST="$(curl -sSL --retry 3 -o /dev/null -w '%{http_code} %{url_effective}' "https://github.com/$REPO/releases/latest")" \
+    || fail "Could not reach GitHub to find the latest release. Check your connection, or set TOOLCHEST_VERSION."
+  LATEST_URL="${LATEST#* }"
+  VERSION="${LATEST_URL##*/tag/v}"
+  if [[ "${LATEST%% *}" != "200" || "$LATEST_URL" != */tag/v* || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    fail "There is no published release to install (GitHub answered ${LATEST%% *}). Build from source instead: see the README."
+  fi
+fi
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "'$VERSION' is not a version like 1.0.0."
+
+ZIP_NAME="Toolchest-$VERSION.zip"
+SUMS_NAME="SHA256SUMS.txt"
+RELEASE_URL="$BASE_URL/v$VERSION"
+
+say "Installing Toolchest $VERSION to $INSTALL_DIR"
+
+# --- Download and verify ---
+
+WORK="$(mktemp -d)"
+STAGED=""
+cleanup() {
+  rm -rf "$WORK"
+  [[ -z "$STAGED" ]] || rm -rf "$STAGED"
+}
+trap cleanup EXIT
+
+curl -fsSL --retry 3 -o "$WORK/$ZIP_NAME" "$RELEASE_URL/$ZIP_NAME" \
+  || fail "Could not download $RELEASE_URL/$ZIP_NAME. Check your connection, and that release $VERSION exists."
+curl -fsSL --retry 3 -o "$WORK/$SUMS_NAME" "$RELEASE_URL/$SUMS_NAME" \
+  || fail "Could not download $RELEASE_URL/$SUMS_NAME. Without the checksum list the download cannot be verified."
+
+EXPECTED="$(awk -v f="$ZIP_NAME" '$2 == f { print $1 }' "$WORK/$SUMS_NAME")"
+[[ "$EXPECTED" =~ ^[0-9a-f]{64}$ ]] || fail "$SUMS_NAME has no valid entry for $ZIP_NAME."
+ACTUAL="$(shasum -a 256 "$WORK/$ZIP_NAME" | awk '{ print $1 }')"
+if [[ "$ACTUAL" != "$EXPECTED" ]]; then
+  fail "SHA-256 mismatch for $ZIP_NAME.
+  expected $EXPECTED
+  got      $ACTUAL
+The download is damaged or has been changed. Nothing was installed."
+fi
+say "  SHA-256 verified"
+
+mkdir "$WORK/unpacked"
+ditto -x -k "$WORK/$ZIP_NAME" "$WORK/unpacked" || fail "Could not unpack $ZIP_NAME."
+NEW_APP="$WORK/unpacked/Toolchest.app"
+[[ -d "$NEW_APP" ]] || fail "$ZIP_NAME does not contain Toolchest.app. Nothing was installed."
+codesign --verify --strict --deep "$NEW_APP" 2>/dev/null || fail "Toolchest.app in the download has a broken signature. Nothing was installed."
+FOUND_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$NEW_APP/Contents/Info.plist" 2>/dev/null || true)"
+[[ "$FOUND_ID" == "$BUNDLE_ID" ]] || fail "The app in the download is not Toolchest (bundle id '$FOUND_ID'). Nothing was installed."
+
+# --- Install ---
+
+DEST="$INSTALL_DIR/Toolchest.app"
+
+# Quit the copy that is about to be replaced, so it can undo its changes (the Caps Lock mapping, power assertions) first. Another copy elsewhere is left alone.
+for pid in $(pgrep -x Toolchest 2>/dev/null || true); do
+  if [[ "$(ps -p "$pid" -o comm= 2>/dev/null)" == "$DEST/Contents/MacOS/Toolchest" ]]; then
+    say "  Quitting the running Toolchest"
+    kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 30); do kill -0 "$pid" 2>/dev/null || break; sleep 0.2; done
+    if kill -0 "$pid" 2>/dev/null; then fail "Toolchest did not quit. Quit it from its menu, then run this again."; fi
+  fi
+done
+
+STAGED="$INSTALL_DIR/.Toolchest.app.installing"
+rm -rf "$STAGED"
+ditto "$NEW_APP" "$STAGED" || fail "Could not copy Toolchest into $INSTALL_DIR."
+
+# Swap in two moves, so the old copy comes back if the new one cannot be put in place.
+OLD=""
+if [[ -e "$DEST" ]]; then
+  OLD="$INSTALL_DIR/.Toolchest.app.old"
+  rm -rf "$OLD"
+  mv "$DEST" "$OLD" || fail "Could not replace $DEST. Quit Toolchest and try again."
+fi
+if ! mv "$STAGED" "$DEST"; then
+  [[ -z "$OLD" ]] || mv "$OLD" "$DEST"
+  fail "Could not move Toolchest into place. The previous copy, if any, was put back."
+fi
+STAGED=""
+[[ -z "$OLD" ]] || rm -rf "$OLD"
+say "  Installed $DEST"
+
+# Register the app and its extensions with the system now, not at the next login.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$DEST" >/dev/null 2>&1 || true
+pluginkit -a "$DEST/Contents/PlugIns/ToolchestFinder.appex" >/dev/null 2>&1 || true
+pluginkit -a "$DEST/Contents/PlugIns/ToolchestWidgets.appex" >/dev/null 2>&1 || true
+
+if [[ "$OPEN_APP" == true ]]; then
+  open "$DEST" || fail "Installed, but could not open Toolchest. Open it from $INSTALL_DIR."
+  say "  Opened Toolchest"
+fi
+
+say ""
+if [[ "$OPEN_APP" == true ]]; then
+  say "${GREEN}Done.${NC} Toolchest is open. Its welcome window walks through the permissions."
+else
+  say "${GREEN}Done.${NC} Toolchest is in $INSTALL_DIR."
+fi
+say "To remove Toolchest later, see the Uninstall section of the README."

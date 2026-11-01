@@ -1,0 +1,44 @@
+name: Feature request
+description: Suggest a new tool or an improvement to an existing one.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The everyday situation, in your words. Start from the problem, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Toolchest to do?
+      description: How it should behave, and how you would turn it on and off.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      options:
+        - Finder
+        - Windows and Dock
+        - Keyboard
+        - Screen
+        - Audio
+        - Utilities
+        - Mail and Notes
+        - A new module
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: Does macOS offer a public way to do it?
+      description: A framework, an API or a setting, if you know one. Toolchest uses public APIs only.
+    validations:
+      required: false
